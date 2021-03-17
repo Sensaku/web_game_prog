@@ -1,7 +1,12 @@
-const express = require('express')
+const express = require('express');
+const { emit } = require('process');
 const app = express();
 const http = require('http').Server(app);
+
 const io = require('socket.io')(http);
+let nbUpdatePerSeconds = 3;
+
+let start_time;
 
 http.listen(8082, () => {
 	console.log("Web server écoute sur http://localhost:8082");
@@ -21,6 +26,26 @@ var playerNames = {};
 var listOfPlayers = {};
 
 io.on('connection', (socket) => {
+	let emitStamp;
+	let connectionStamp = Date.now();
+
+	// Pour le ping/pong mesure de latence
+	setInterval(() => {
+        emitStamp = Date.now();
+        socket.emit("ping");
+    },500);
+
+	heartbeat()
+
+	socket.on("pongo", () => { // "pong" is a reserved event name
+		let currentTime = Date.now();
+		let timeElapsedSincePing = currentTime - emitStamp;
+		let serverTimeElapsedSinceClientConnected = currentTime - connectionStamp;
+
+		//console.log("pongo received, rtt time = " + timeElapsedSincePing);
+
+		socket.emit("data", currentTime, timeElapsedSincePing, serverTimeElapsedSinceClientConnected);
+	});
 
 	// when the client emits 'sendchat', this listens and executes
 	socket.on('sendchat', (data) => {
@@ -56,7 +81,7 @@ io.on('connection', (socket) => {
 		// listOfPlayer = {'michel':{'x':0, 'y':0, 'v':0}, 
 		// 							john:{'x':10, 'y':10, 'v':0}}
 		// for this example we have x, y and v for speed... ?
-		var player = {'x':0, 'y':0, 'v':0}
+		var player = {x:50, y:50, vx:0, vy:0};
 		listOfPlayers[username] = player;
 		io.emit('updatePlayers',listOfPlayers);
 	});
@@ -75,4 +100,19 @@ io.on('connection', (socket) => {
 		// echo globally that this client has left
 		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
 	});
+
+	socket.on("changeNbUpdate", (nb) =>{
+		console.log("Update received from client");
+		nbUpdatePerSeconds = nb;
+	});
+
+	heartbeat(connectionStamp);
+	function heartbeat(connectionStamp){
+		let new_update = 1000/nbUpdatePerSeconds;
+		setTimeout(() => {
+			socket.emit("auto-update", nbUpdatePerSeconds);
+			return heartbeat(connectionStamp);
+		}, new_update);
+	}
 });
+

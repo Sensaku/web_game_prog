@@ -1,7 +1,10 @@
 let username;
 let conversation, data, datasend, users;
 
+let artificialLatencyDelay=0;
+
 let socket;
+let nbAutoUpdate = 0;
 
 // on load of page
 window.onload = init;
@@ -31,6 +34,12 @@ function init() {
       sendMessage();
     }
   };
+
+  data.onblur = (event) => {
+    console.log("Input field lost focus");
+    canvas.focus(); // gives the focus to the canvas
+  }
+
   // sends the chat message to the server
   function sendMessage() {
     let message = data.value;
@@ -40,6 +49,8 @@ function init() {
   }
   // on connection to server, ask for user's name with an anonymous callback
   socket.on("connect", () => {
+    clientStartTimeAtConnection = Date.now();
+
     // call the server-side function 'adduser' and send one parameter (value of prompt)
     socket.emit("adduser", username);
   });
@@ -70,6 +81,58 @@ function init() {
     updatePlayers(listOfplayers);
   });
 
+  // Latency, ping etc.
+  socket.on("ping", () => {
+    send("pongo");
+  });
+
+  socket.on("data", (timestamp, rtt, serverTime) => {
+    //console.log("rtt time received from server " + rtt);
+
+    let spanRtt = document.querySelector("#rtt");
+    spanRtt.innerHTML = rtt;
+
+    let spanPing = document.querySelector("#ping");
+    spanPing.innerHTML = (rtt/2).toFixed(1);
+
+    let spanServerTime = document.querySelector("#serverTime");
+    spanServerTime.innerHTML = (serverTime/1000).toFixed(2);
+
+    let clientTime = Date.now() - clientStartTimeAtConnection;
+
+    let spanClientTime = document.querySelector("#clientTime");
+    spanClientTime.innerHTML = (serverTime/1000).toFixed(2);
+  
+  });
+
+  // Reception de l'auto-update => on affiche l'heure de la réception
+  socket.on("auto-update", (nb) => {
+    inputNbUpdate = document.querySelector("#updates");
+    inputNbUpdate.value = nb;
+    nbAutoUpdate += 1; //++?
+    console.log(nbAutoUpdate);
+    spanAutoUpdate = document.querySelector("#nbAutoUpdate");
+    spanAutoUpdate.innerHTML = nbAutoUpdate;
+  });
+
   // we start the Game
   startGame();
+}
+
+// PERMET D'ENVOYER SUR WEBSOCKET en simulant une latence (donnée par la valeur de delay)
+function send(typeOfMessage, data) {
+  setTimeout(() => {
+      socket.emit(typeOfMessage, data)
+  }, artificialLatencyDelay);
+}
+
+function changeArtificialLatency(value) {
+  artificialLatencyDelay = parseInt(value);
+
+  let spanDelayValue = document.querySelector("#delay");
+  spanDelayValue.innerHTML = artificialLatencyDelay;
+}
+
+function sendNbUpdate(nb){
+  socket.emit("changeNbUpdate", nb);
 }
