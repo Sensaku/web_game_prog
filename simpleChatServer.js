@@ -35,7 +35,13 @@ io.on('connection', (socket) => {
         socket.emit("ping");
     },500);
 
-	heartbeat()
+	function heartbeat(connectionStamp){
+		let new_update = 1000/nbUpdatePerSeconds;
+		setTimeout(() => {
+			socket.emit("auto-update", nbUpdatePerSeconds);
+			return heartbeat(connectionStamp);
+		}, new_update);
+	}
 
 	socket.on("pongo", () => { // "pong" is a reserved event name
 		let currentTime = Date.now();
@@ -107,12 +113,5 @@ io.on('connection', (socket) => {
 	});
 
 	heartbeat(connectionStamp);
-	function heartbeat(connectionStamp){
-		let new_update = 1000/nbUpdatePerSeconds;
-		setTimeout(() => {
-			socket.emit("auto-update", nbUpdatePerSeconds);
-			return heartbeat(connectionStamp);
-		}, new_update);
-	}
 });
 

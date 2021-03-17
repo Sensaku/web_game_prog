@@ -4,9 +4,78 @@ let canvas, ctx, mousePos;
 let allPlayers = {};
 let target = {x:150, y:200, radius:50, color:'yellow'};
 
+class obstacle{
+  constructor(x, y, width, height, color, vx=0, vy=0, range){
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    this.vx = vx;
+    this.vy = vy;
+    this.range = range;
+  }
+
+  get getX(){
+    return this.x;
+  }
+
+  setX(new_x){
+    this.x = new_x;
+  }
+
+  setY(new_y){
+    this.y = new_y;
+  }
+
+  get getY(){
+    return this.y;
+  }
+
+  get getWidth(){
+    return this.width;
+  }
+
+  get getHeight(){
+    return this.height;
+  }
+
+  get getColor(){
+    return this.color;
+  }
+
+  get getVx(){
+    return this.vx;
+  }
+
+  get getVy(){
+    return this.vy;
+  }
+}
+
+
+class player{
+  
+  constructor(x, y){
+    this.x = x;
+    this.y = y;
+    this.vx = 10;
+    this.vy = 10;
+    this.color = "blue";
+  }
+
+  get getX(){
+    return this.x;
+  }
+
+  get getY(){
+    return this.y;
+  }
+
+}
+
 let obstacles = [];
 
-// for time based animation
 // for time based animation
 let delta, oldTime;
 let playerSpeed = 100; // 100 pixels/s
@@ -29,8 +98,8 @@ function startGame() {
 }
 
 function createObstacles() {
-  let o1 = {x:50, y:50, width:20, height:100, color:"black", vy:50, range:110}
-  let o2 = {x:150, y:50, width:20, height:50, color:"orange", vy:30, range:100}
+  let o1 = new obstacle(50,50,20,100,"black",0,50,100);
+  let o2 = new obstacle(150, 50, 20, 50, "orange", 0, 30, 100);
   obstacles.push(o1);
   obstacles.push(o2);
 }

@@ -109,8 +109,8 @@ function init() {
   socket.on("auto-update", (nb) => {
     inputNbUpdate = document.querySelector("#updates");
     inputNbUpdate.value = nb;
-    nbAutoUpdate += 1; //++?
-    console.log(nbAutoUpdate);
+    
+    nbAutoUpdate += 1;
     spanAutoUpdate = document.querySelector("#nbAutoUpdate");
     spanAutoUpdate.innerHTML = nbAutoUpdate;
   });
